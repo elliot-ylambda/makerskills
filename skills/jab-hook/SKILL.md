@@ -1,6 +1,6 @@
 ---
 name: jab-hook
-description: Gary Vaynerchuk's jab-jab-jab-right-hook framework applied to a personal portfolio rotation on X and LinkedIn. Jabs = build-in-public + educational (value). Hooks = promo (the ask). Each property in the user's configured portfolio (see `~/.config/makerskills/jab-hook/properties.yaml`) gets a hook at least once every ~3 weeks; jabs fill the rest. Drafts go into the user's Typefully workspace via MCP. Modes — plan (7-day plan), pick-next (single post), audit (coverage report), draft (specific post). Triggers on "/jab-hook," "what should I post," "plan my socials," "next promo," "next jab," "next hook," "social rotation," "promote [property]," "BIP post," "audit my socials," "what haven't I posted about."
+description: Gary Vaynerchuk's jab-jab-jab-right-hook framework applied to a personal portfolio rotation across the user's social profiles. Jabs = build-in-public + educational (value). Hooks = promo (the ask). Each property in the user's configured portfolio (see `~/.config/makerskills/jab-hook/properties.yaml`) gets a hook at least once every ~3 weeks; jabs fill the rest. Drafts go into the user's Typefully workspace via MCP. Modes — plan (7-day plan), pick-next (single post), audit (coverage report), draft (specific post). Triggers on "/jab-hook," "what should I post," "plan my socials," "next promo," "next jab," "next hook," "social rotation," "promote [property]," "BIP post," "audit my socials," "what haven't I posted about."
 metadata:
   version: 0.3.1
 ---
