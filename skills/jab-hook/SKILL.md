@@ -77,7 +77,7 @@ Follow `references/voice.md` and `references/content-types.md`. Default: **singl
 For `promo` and `educational` posts, optionally scan inspiration accounts (`references/inspiration.md`) before drafting:
 
 1. Pick 1–2 accounts whose audience overlaps with the property
-2. Pull recent posts (agent-browser if it works on LinkedIn; otherwise ask the user to paste examples or fall back to their X/newsletter)
+2. Pull recent posts (via the `social-fetch` skill; otherwise ask the user to paste examples or fall back to their X/newsletter)
 3. Extract structural patterns: hook openers, post length, line-break rhythm, CTA styles
 4. Apply ONE pattern to the user's voice — never mimic phrasing
 5. Log new patterns in `${MAKERSKILLS_CONFIG:-$HOME/.config/makerskills}/jab-hook/patterns.local.md` (create if missing) so they accumulate — `references/patterns.md` documents the starter patterns and stays read-only
@@ -98,7 +98,7 @@ If yes:
 ## Composes with
 
 - `paste` — clean output for pasting into Typefully / LinkedIn / X manually if the MCP path doesn't fit
-- `social-fetch` — pull inspiration-account posts for structural analysis (replaces inline agent-browser)
+- `social-fetch` — pull inspiration-account posts for structural analysis
 - `second-brain` — the `Content Ideas` wiki page hoppers hooks, frameworks, stories; `/jab-hook` drafts pull candidates from there
 - `deep-research` — when a promo needs a stat or citation the draft doesn't have yet
 - `marketingskills:social` — generic social frameworks, useful when teaching strategy vs shipping your own posts
