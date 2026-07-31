@@ -2,7 +2,7 @@
 name: skillify
 description: When you want to create, adapt, or update a Claude Code skill in one of your sibling repos (list your own repos in ~/.config/makerskills/skillify/repos.yaml; defaults to makerskills). Routes to the right mode automatically. Modes — CREATE (from-chat / from-video / from-dump / from-scratch) turns a workflow, brief, recording, or fresh idea into a new skill. ADAPT ports an external skill (GitHub URL, agentskills.io, local disk) into your namespace with three-bucket classification (keep/adapt/add) + license check + attribution. UPDATE improves existing skills from learnings with cross-skill propagation, memory-vs-skill triage, and semver discipline. Defers to Anthropic's guidance (compound-engineering:create-agent-skill, compound-engineering:skill-creator, compound-engineering:heal-skill) for schema and best-practice depth. Triggers on "/skillify," "create a skill," "make this a skill," "skill from this chat," "extract a skill from what we've been doing," "adapt this skill," "port this skill," "fork this skill," "borrow this skill," "update X skill," "apply this to the relevant skills," "propagate this learning," "improve [skill]," "fix [skill]," "iterate on [skill]." Part of the -ify trifecta (skillify / toolify / loopify) for extending Claude Code.
 metadata:
-  version: 0.2.1
+  version: 0.2.2
 ---
 
 # /skillify — Create, adapt, or update a skill
@@ -139,7 +139,7 @@ Body follows existing skills' pattern (`pm`, `decide`, `second-brain`):
 - Composes-with cross-references
 - Quality notes at the end
 
-### Step 7 — Update README, commit, push
+### Step 7 — Update README and commit
 
 Append to target repo's README skill table:
 
@@ -147,7 +147,11 @@ Append to target repo's README skill table:
 | [`<name>`](./skills/<name>/SKILL.md) | <one-line purpose> |
 ```
 
-Commit + push. Report new skill path, commit hash, and reminder that `/plugin install` or symlink may need a refresh.
+Create the local commit and report the new skill path and commit hash. Remote
+publication is an external mutation: use a reviewed typed repository action
+only when the current capability explicitly supports the exact branch update.
+Otherwise return `execution_unavailable` with the local commit and a user-run
+push handoff. Never run a networked git or GitHub CLI command from shell.
 
 ### Step 8 — Offer follow-ups
 
@@ -254,7 +258,10 @@ Write `references/attribution.md`:
 <upstream LICENSE text if MIT/BSD/Apache requires it, OR reference where in this repo it lives>
 
 ## Upgrade path
-Run `git ls-remote <repo-url> HEAD`. If SHA differs from above, re-run `/skillify <same-url>` for a 3-way merge.
+Read the upstream branch's newest commit with `magister_integration_read` and
+the documented GitHub commits route. If the SHA differs from above, re-run
+`/skillify <same-url>` for a 3-way merge. If that typed read is unavailable,
+report `execution_unavailable` and ask the user to supply the current SHA.
 ```
 
 For MIT / Apache / BSD, LICENSE text either gets copied into this file or the source LICENSE file gets copied to the skill dir.
@@ -376,13 +383,18 @@ See `references/update-versioning.md` for semver rules.
 
 Batch multiple file changes within one skill into a single commit.
 
-### Step 7 — Commit + push
+### Step 7 — Commit and hand off publication
 
 Group by skill. Examples:
 
 - One-skill update: `"slide-deck: emphasize spoken-aloud voice (write for the ear, not the page)"`
 - Multi-skill propagation: `"jab-hook, marketingskills:social: link placement (no inline URLs)"`
 - Cross-repo: one commit per repo. Don't atomic-commit across repos.
+
+Create local commits only. For each remote publication, use a reviewed typed
+repository mutation only if the exact capability is advertised; otherwise
+return `execution_unavailable` with the repo, branch, and commit for the user to
+push. Never fall back to a networked git or GitHub CLI command.
 
 ### Step 8 — Report
 

@@ -9,7 +9,7 @@ All notable changes to `makerskills` are documented here. Format loosely follows
 ## [v1.4.1] — 2026-07-30
 
 ### Fixed
-- **Hosted Agent transport safety** — updated network-dependent research, media, knowledge, planning, and scaffolding skills to use reviewed typed actions when available and otherwise stop with an explicit unavailable state. Removed instructions that depended on local network CLIs, package installation, direct provider requests, or remote media downloads inside a sandboxed tool subprocess.
+- **Hosted Agent transport safety** — updated network-dependent research, media, knowledge, planning, and scaffolding skills to use reviewed typed actions when available and otherwise stop with an explicit unavailable state. Removed instructions that depended on local network CLIs, implicit package runners, loopback browser automation, package/model installation, direct provider requests, or remote media downloads inside a sandboxed tool subprocess.
 
 ---
 

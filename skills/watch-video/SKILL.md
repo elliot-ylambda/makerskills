@@ -2,7 +2,7 @@
 name: watch-video
 description: When you want to transcribe or analyze a local/attached video. Three depth modes are available — transcript, visual, and dense local-frame analysis. Remote video acquisition and direct provider uploads require a reviewed typed asset/video action and otherwise return execution_unavailable. Saves outputs under ~/Documents/videos/ and can capture a summary to second-brain.
 metadata:
-  version: 0.2.3
+  version: 0.2.4
 ---
 
 # /watch-video — Transcribe and analyze any video at the depth you choose
@@ -69,13 +69,19 @@ Where:
 
 1. **MLX-Whisper local** (default — fast on Mac M-series):
    ```bash
-   # Requires mlx-whisper to be preinstalled by the user or image build.
-   python3 -c "import mlx_whisper; mlx_whisper.transcribe('<file>', path_or_hf_repo='mlx-community/whisper-large-v3-turbo')" \
-     > "<workdir>/transcript-raw.json"
+   # Both mlx-whisper and a complete local model directory must already exist.
+   test -d "<local-model-dir>" || exit 2
+   HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 python3 -c \
+     "import json, mlx_whisper, sys; json.dump(mlx_whisper.transcribe(sys.argv[1], path_or_hf_repo=sys.argv[2]), sys.stdout)" \
+     "<file>" "<local-model-dir>" > "<workdir>/transcript-raw.json"
    ```
-   Or via the CLI: `mlx_whisper <file> --model mlx-community/whisper-large-v3-turbo --output-dir <workdir>`
 
-2. **whisper.cpp** (fallback if MLX is unavailable)
+   Do not pass a registry/repository model identifier. If the local model path
+   is missing or incomplete, report the prerequisite and stop; model download
+   is not a sandbox fallback.
+
+2. **whisper.cpp** (fallback only when both its executable and model file are
+   already local; never invoke its model-download helper)
 
 **Clean the transcript** (only needed for YouTube auto-subs which have rolling captions; Whisper output is already clean):
 
@@ -262,7 +268,7 @@ In chat:
 | Failure | Response |
 |---|---|
 | Video unavailable / private / region-locked | Report and stop |
-| No subtitles + Whisper not installed | Report the missing preinstalled local dependency and stop transcription |
+| No subtitles + Whisper/model not installed locally | Report the missing preinstalled local dependency and stop transcription |
 | ffmpeg missing (for visual/multimodal) | Report the missing preinstalled local dependency and stop frame extraction |
 | Vision pass returns empty / unclear | Lower the frame count, retry, or fall back to transcript-only with a note |
 | No advertised vision surface | Return `execution_unavailable` and offer transcript-only mode |
