@@ -110,7 +110,9 @@ Add as they're discovered — this list is company-specific muscle memory:
 
 - Branch pattern: `feature/YYYY-MM-snapshot`
 - Review: <auto / manual / codex review / other>
-- Merge: `gh pr merge --squash --delete-branch`
+- Merge: use the reviewed `magister-github` typed action with exact approval
+  when available; otherwise the repository owner completes the merge outside
+  Hosted Agent.
 
 ## Memory note
 

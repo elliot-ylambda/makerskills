@@ -2,12 +2,15 @@
 name: toolify
 description: When you want to integrate an external tool, API, MCP server, or service into a project — the wizard walks you through auth, config, env vars, client wrapper code, example usage, and (optionally) a smoke-test. Scoped to Next.js and Rails projects (the two primary stacks). Interactive Q&A pattern — starts with the tool name, asks structured questions until the integration is fully specified, then scaffolds files. Examples of tools to toolify — Stripe, Kit, Sanity, Notion, Neon, Supabase, Fathom, Rewardful, SavvyCal, Riverside, ScrapeCreators, Anthropic, OpenAI, Gemini, Twilio, Resend, Postmark, Vercel Blob, custom internal APIs. For MCP servers specifically, also handles the .mcp.json wiring. Triggers on "/toolify," "integrate X," "add X to this project," "wire up X," "set up the X integration," "hook up X," "connect X," "add MCP for X." Part of the -ify trifecta (skillify / toolify / loopify) for extending Claude Code. NOT for adding new SKILL.md files — that's skillify. NOT for cron/agent loops — that's loopify.
 metadata:
-  version: 0.1.1
+  version: 0.1.2
 ---
 
 # /toolify — Wire up an integration or MCP server
 
-Interactive wizard for adding an external tool / API / MCP into a project. Ends with working code + env vars set + a verification path.
+Interactive wizard for adding an external tool / API / MCP into a project.
+Ends with working code, safe environment-variable placeholders, and a
+verification path; it never installs packages, transmits secrets, or configures
+an external provider from sandboxed shell.
 
 ## Scope
 
@@ -117,37 +120,32 @@ Apply the right auth pattern per tool category. Never invent — use the pattern
 Add to the appropriate file:
 
 - **Local dev**: `.env.local` (Next.js) / `.env` (Rails) — NEVER committed
-- **Vercel**: sensitivity depends on the var. Two rules — apply the right one:
-  - **Public / bundle-baked vars (`NEXT_PUBLIC_*`)** — these get inlined into the client bundle at build time and are ALREADY public. Use `--no-sensitive` so you can audit them later:
-    ```bash
-    vercel env add NEXT_PUBLIC_APP_URL production --value "<url>" --no-sensitive --yes
-    ```
-  - **Server-side secrets (API keys, webhook secrets, DB URLs)** — never enter the client bundle. Use Vercel's default `--sensitive` behavior so the value is write-only via the CLI (can't be read back via `vercel env pull`):
-    ```bash
-    vercel env add STRIPE_SECRET_KEY production --value "<key>" --sensitive --yes
-    vercel env add STRIPE_WEBHOOK_SECRET production --value "<secret>" --sensitive --yes
-    ```
-  - **The rule**: only `NEXT_PUBLIC_*` uses `--no-sensitive`. Everything else uses `--sensitive`. Getting this wrong means server secrets are readable via `vercel env pull` in someone's local terminal — same class of leak as committing them.
-  - See `references/vercel-env-vars.md` for the full policy + verification via `vercel env pull` + brackets-check.
-- **Heroku**: `heroku config:set <VAR>=<value> -a <app-name>`
+- **Hosted environments**: generate a checklist that distinguishes public
+  bundle-baked values from server-side secrets. Never ask the model to receive
+  a secret or run a hosting CLI. The user sets real values in the provider's
+  approved secret-management surface. A future purpose-built secret action
+  must keep values out of prompts, approval prose, logs, and generic request
+  bodies.
 
 Also update `.env.example` / `.env.local.example` with the placeholder so teammates know the var is needed.
 
 ## Step 6 — Smoke test
 
-Generate a one-line verification the user can run:
+Generate a one-line verification for the user to run outside the Hosted Agent
+sandbox. The sandbox cannot perform arbitrary provider network checks and must
+not receive their secret:
 
 ```bash
-# Example for a REST API:
-curl -H "Authorization: Bearer $STRIPE_SECRET_KEY" https://api.stripe.com/v1/customers?limit=1
-
 # Example for an SDK:
 node -e "const s = require('./src/lib/stripe.ts').default; s.customers.list({limit:1}).then(console.log)"
 
 # For MCP: restart Claude Code, run any command that touches the MCP server
 ```
 
-Show the expected output shape. If the call fails, the wizard should be first to catch it, not the user in prod.
+Show the expected output shape and clearly label this as a user-run check. If a
+reviewed typed integration action exists, prefer that action and keep the
+credential Gateway-owned. Otherwise report `execution_unavailable`; do not try
+to validate the provider through shell networking.
 
 ## Step 7 — Report + follow-ups
 

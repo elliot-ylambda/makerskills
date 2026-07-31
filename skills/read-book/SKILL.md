@@ -2,7 +2,7 @@
 name: read-book
 description: When you want to read and extract structured notes from a book — PDF, EPUB, MOBI, markdown, .txt, pasted text, or URL to a public-domain work. Reads in chunks (by chapter when a TOC exists, by 50-page blocks otherwise), extracts per-chapter TL;DR + key concepts + quotes + action items + frameworks, and offers to capture to second-brain raw/ as a highlights- file. Four modes — notes (default, chapter-by-chapter), summary (whole-book TL;DR + 3–5 takeaways), quotes (pull-quote highlights only), study (notes + Q&A spaced-rep prep). Triggers on "/read-book," "read this book," "extract notes from this PDF," "what's in this book," "summarize this ebook," "pull quotes from this." Sibling to watch-video (same content-consumption pattern, different medium).
 metadata:
-  version: 0.1.0
+  version: 0.1.1
 ---
 
 # /read-book — Extract structured notes from books and long PDFs
@@ -158,8 +158,8 @@ In chat:
 
 | Failure | Response |
 |---|---|
-| EPUB/MOBI without pandoc / ebook-convert | Tell the user: `brew install pandoc` or `brew install calibre` (calibre includes `ebook-convert`) |
-| PDF is scanned (no text layer) | Suggest OCR first: `brew install ocrmypdf && ocrmypdf <pdf> <pdf-ocr.pdf>` |
+| EPUB/MOBI without a preinstalled converter | Report the missing local prerequisite and stop that conversion path; do not install packages from sandboxed shell |
+| PDF is scanned (no text layer) | Use a preinstalled local OCR tool, or ask the user to attach an OCR'd copy |
 | PDF has no detectable TOC | Fall back to 50-page chunks. Note in the metadata. |
 | Book is unusually long (>500 pages) | Warn cost / time, ask if the user wants summary mode instead of full notes |
 | Chunk extraction empty | Skip the chunk, log, continue. Don't fail the whole run. |

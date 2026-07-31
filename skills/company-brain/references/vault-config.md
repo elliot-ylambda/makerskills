@@ -44,9 +44,8 @@ export COMPANY_BRAIN_VAULT="$HOME/code/mycompany-brain"
 mkdir -p "$COMPANY_BRAIN_VAULT"
 cd "$COMPANY_BRAIN_VAULT"
 
-# 3. Init git (if not already)
+# 3. Init a local git repository (if not already)
 git init
-git remote add origin git@github.com:mycompany/company-brain.git
 
 # 4. Create structured raw dirs
 mkdir -p people companies meetings sops decisions customer-language recurring-questions sales-objections raw wiki outputs Projects Team Templates Drafts
@@ -68,8 +67,12 @@ EOF
 
 # 8. First commit
 git add . && git commit -m "Seed company brain schema"
-git push -u origin main
 ```
+
+Remote creation, synchronization, and backup are separate external actions.
+Use a reviewed typed repository action when one supports the exact operation;
+otherwise return `execution_unavailable` and let the user configure and sync
+the remote outside Hosted Agent.
 
 ## Sensitivity access lists (optional)
 
@@ -84,6 +87,8 @@ Company-brain skill reads these when respecting sensitivity in `query` mode.
 
 ## Backup
 
-Same as any git repo. Push to a hosted remote (GitHub / GitLab / Bitbucket). Recover by cloning.
+Use the team's approved backup process. Hosted Agent may prepare local commits,
+but remote synchronization requires a reviewed typed repository action or a
+user-run operation.
 
 For sensitive content in the vault, treat it like any git repo with secrets — encrypted at rest via `git-crypt` if the remote isn't fully trusted.

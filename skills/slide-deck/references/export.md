@@ -1,96 +1,50 @@
-# Export reference
+# Export handoff reference
 
-Snapshot a rendered React deck to portable HTML / PDF / Vercel URL via Playwright. Output is brand-perfect because it's actual screenshots of the deck rendered in the dev server.
+Hosted Agent cannot snapshot a rendered React deck: sandboxed shell cannot
+reach the loopback dev server, and no current typed action returns the exact
+bounded image artifacts. Report `execution_unavailable` for rendering and give
+the user the handoff below. Do not create or run a browser automation script in
+the sandbox.
 
 ## Prerequisites
 
-| Tool | Install | Check |
-|---|---|---|
-| Playwright | `npm install -g playwright && npx playwright install chromium` | `npx playwright --version` |
-| ImageMagick (for PDF) | `brew install imagemagick` | `magick --version` |
-| img2pdf (PDF alternative, simpler) | `pip install img2pdf` | `img2pdf --version` |
-| Vercel CLI | `npm install -g vercel` | `vercel --version` |
+| Tool | Requirement |
+|---|---|
+| Project-owned Playwright + Chromium | Already installed in the user's local project; never resolve it through a package runner |
+| ImageMagick (for PDF) | Already installed in the user's local environment |
+| img2pdf (PDF alternative) | Already installed in the user's local environment |
 
-If any are missing on first run, surface the install command to the user; don't try to install silently.
+If any are missing, report the prerequisite and stop that export path. Never
+run package managers or model-directed browser navigation from sandboxed shell.
 
-## Step 1 — Verify dev server
+## Step 1 — Prepare the user-run render handoff
 
-```bash
-# Ping the dev server (portless-compatible — set SLIDE_DECK_DEV_HOST to e.g. yoursite.localhost:1355)
-curl -sf -o /dev/null -w "%{http_code}" http://${SLIDE_DECK_DEV_HOST:-localhost:3000}/slides/<slug> && echo " OK" || echo " not running"
-```
-
-If not running:
+Return the deck source path, slug, slide count, expected 1920×1080 viewport,
+presenter-stripped route suffix (`?present=0`), and output directory
+`~/Documents/slide-exports/<slug>-<date>/`. Ask the user to run their project's
+approved local exporter. If they need to start the project first, provide this
+as a user-run instruction:
 
 ```
 Dev server isn't running. Start it with:
   cd ${SLIDE_DECK_REPO:-$HOME/code/your-slide-deck-site} && npm run dev
 
-Then re-run /slide-deck export <slug> <html|pdf|vercel>.
+Then use your project's local Playwright/export command to save one PNG per
+slide and attach or place those PNGs in the output directory.
 ```
 
-Don't auto-start — `npm run dev` is long-running.
+Do not execute this command in Hosted Agent; it is long-running and its server
+is not reachable from the sandbox network namespace.
 
 ## Step 2 — Count slides
 
-```bash
-# Counts top-level objects in the `slides: Slide[]` array
-grep -E "^\s+\{$" ${SLIDE_DECK_REPO:-$HOME/code/your-slide-deck-site}/src/app/slides/<slug>/page.tsx | wc -l
-```
+Read `page.tsx` and count the top-level `id:` entries in `slides: Slide[]`.
+Do not infer the count from a text grep for production decks.
 
-Better: open the file and count `id:` entries in the slides array. Don't trust grep for production decks — verify by reading the file.
+## Step 3 — Combine supplied snapshots per output type
 
-## Step 3 — Snapshot script
-
-Save as `~/Documents/slide-exports/_scripts/snapshot.mjs` (create on first run):
-
-```javascript
-import { chromium } from 'playwright';
-import { mkdir } from 'node:fs/promises';
-import path from 'node:path';
-
-const [, , slug, slideCountStr, outDir] = process.argv;
-const slideCount = parseInt(slideCountStr, 10);
-const host = process.env.SLIDE_DECK_DEV_HOST || 'localhost:3000';
-const baseUrl = `http://${host}/slides/${slug}`;
-
-await mkdir(outDir, { recursive: true });
-
-const browser = await chromium.launch();
-const ctx = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
-const page = await ctx.newPage();
-
-// Reset persisted slide index so we start at slide 0
-await page.addInitScript(({ slug }) => {
-  localStorage.setItem(`slides:/slides/${slug}`, '0');
-}, { slug });
-
-// Load presenter-stripped view
-await page.goto(`${baseUrl}?present=0`, { waitUntil: 'networkidle' });
-await page.waitForTimeout(500);
-
-for (let i = 0; i < slideCount; i++) {
-  const filename = path.join(outDir, `slide-${String(i).padStart(3, '0')}.png`);
-  await page.screenshot({ path: filename, fullPage: false });
-  console.log(`Saved ${filename}`);
-  if (i < slideCount - 1) {
-    await page.keyboard.press('ArrowRight');
-    await page.waitForTimeout(400); // let any animation settle
-  }
-}
-
-await browser.close();
-console.log(`Done: ${slideCount} slides`);
-```
-
-Run:
-
-```bash
-mkdir -p ~/Documents/slide-exports/<slug>-$(date +%Y-%m-%d)
-node ~/Documents/slide-exports/_scripts/snapshot.mjs <slug> <count> ~/Documents/slide-exports/<slug>-$(date +%Y-%m-%d)
-```
-
-## Step 4 — Combine per output type
+Continue only after the user or an advertised asset-safe host action supplies
+the expected local PNG files. Verify the count and filenames before assembly.
 
 ### html (standalone, portable, with arrow-key nav)
 
@@ -162,16 +116,12 @@ open ~/Documents/slide-exports/<slug>-<date>/<slug>.pdf
 
 ### vercel (shareable URL)
 
-1. Ensure the standalone `html` has been generated (see html section above)
-2. Deploy:
-   ```bash
-   cd ~/Documents/slide-exports/<slug>-<date>/ && vercel --prod --yes
-   ```
-3. Report the URL Vercel returns.
-
-First-time only: the user needs to be logged in (`vercel login`). The skill should check `vercel whoami` and prompt if needed.
-
-To take a deployed deck down later: `vercel rm <project-name>`.
+Ensure the standalone `html` has been generated, then return
+`execution_unavailable` for hosted publication and report the portable folder
+path. Do not invoke a hosting CLI or upload the folder through the generic JSON
+integration action; this path needs the separately designed typed asset
+transport. The user may publish or remove it through their approved hosting
+workflow.
 
 ## Caveats to surface to the user
 
@@ -180,11 +130,5 @@ To take a deployed deck down later: `vercel rm <project-name>`.
 - **File sizes**: a 20-slide deck at 1920×1080 PNG is ~30–50 MB before PDF compression. PDF output is usually 5–15 MB depending on content.
 - **Snapshot quality requires the dev server to render fonts and gradients correctly.** If a slide looks wrong in the PNG, it'll look wrong in the export. First-time export of a brand-new deck: open the dev server and eyeball every slide first.
 
-## Optional: low-resolution preview
-
-For quick previews / Slack thumbnails, snapshot at 1280×720 instead of 1920×1080. Halves the file size at minimal visual loss:
-
-```javascript
-// In snapshot.mjs, change:
-viewport: { width: 1280, height: 720 }
-```
+For quick previews or chat thumbnails, tell the user's local exporter to use
+1280×720 instead of 1920×1080. This halves file size at minimal visual loss.

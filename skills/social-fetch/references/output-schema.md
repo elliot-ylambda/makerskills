@@ -182,4 +182,7 @@ When the skill completes, output:
 2. **Path to the JSON output** if `--save` flag set (saved to `~/Documents/social-fetches/<platform>-<id>.json`)
 3. **Inline JSON** in chat for the calling skill / the user to use
 
-If only partial data was retrievable (free strategy on X/LinkedIn/IG/TikTok), surface it clearly: *"Free strategy returned author + text + engagement. Replies + full thread require `$SCRAPECREATORS_API_KEY`. See references/auth-keys.md to set up."*
+If only partial data was retrievable, surface it clearly: *"The reviewed typed
+source returned author, text, and engagement, but not replies/the full thread.
+Please paste the missing content if it is required."* Never request or read a
+provider key from the model's environment.

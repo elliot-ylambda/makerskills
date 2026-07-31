@@ -144,8 +144,7 @@ When `outputs/<file>.md` should leave the vault as a polished artifact (research
 ### Default: pandoc + shared stylesheet
 
 ```bash
-# PDF (requires basictex: brew install --cask basictex, then once:
-# sudo tlmgr update --self && sudo tlmgr install collection-fontsrecommended)
+# PDF requires a compatible engine preinstalled by the user or image build.
 pandoc "outputs/<file>.md" \
   --css ~/.local/share/makerskills/render.css \
   --metadata title="<title>" \
@@ -177,7 +176,8 @@ Shared stylesheet at `~/.local/share/makerskills/render.css` — also used by `r
 - Obsidian doesn't render `.qmd` natively — daily-driver editing UX degrades
 - `[[wikilinks]]` are Obsidian-only; Quarto wants standard markdown links
 - YAML frontmatter conventions differ from Obsidian's
-- New tool (`brew install quarto`, ~500MB) + optional Python/R engines
+- Large additional local prerequisite (~500MB) plus optional Python/R engines;
+  it must be installed outside the Hosted Agent sandbox
 - Learning curve (callouts, cross-ref keys, project config, `_quarto.yml`)
 - Most second-brain operations (capture, compile, query) gain nothing from Quarto
 

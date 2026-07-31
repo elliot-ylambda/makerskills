@@ -35,8 +35,8 @@ Read tool with file_path="<pdf>" pages="1-5"
 ```bash
 # Check if text exists
 pdftotext -layout "<pdf>" - 2>/dev/null | wc -c
-# If <1000 chars for a 100-page book, it's scanned. Need OCR:
-brew install ocrmypdf
+# If <1000 chars for a 100-page book, it's scanned. A local OCR tool must
+# already be available:
 ocrmypdf "<pdf>" "<pdf-ocr.pdf>"
 # Then proceed with the OCR'd version
 ```
@@ -48,7 +48,7 @@ ocrmypdf "<pdf>" "<pdf-ocr.pdf>"
 Convert to markdown via pandoc (preserves chapter structure):
 
 ```bash
-# Install once: brew install pandoc
+# Requires a preinstalled local pandoc.
 pandoc "<book.epub>" -o "<workdir>/book.md" --wrap=none
 ```
 
@@ -57,7 +57,7 @@ The output has `# Chapter X` headers — easy to chunk.
 For richer metadata + cover extraction, use calibre's `ebook-convert`:
 
 ```bash
-# Install once: brew install calibre
+# Requires a preinstalled local calibre/ebook-convert.
 ebook-convert "<book.epub>" "<workdir>/book.txt"
 # Calibre also extracts metadata.opf alongside
 ```

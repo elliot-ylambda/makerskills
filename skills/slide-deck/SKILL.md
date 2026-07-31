@@ -1,13 +1,13 @@
 ---
 name: slide-deck
-description: When you want to draft, update, convert, or export a slide deck for a React/Next.js slide system (${SLIDE_DECK_REPO:-$HOME/code/your-slide-deck-site}/src/app/slides/). Writes TypeScript Slide[] arrays using your primitives (Eyebrow, Heading, Accent, Body, BulletList, Divider, TwoCol, GradientText), 12 cycling brand gradients, optional sections for "where am I" context, and speaker notes. Inspired by zarazhangrui/frontend-slides — "show, don't tell" applied to narrative (presents 3 angles, you pick) plus density modes (speaker-led vs reading-first). Four modes — new (draft from brief), update (modify existing, with overflow guards), ppt (convert legacy PPTX → React deck), export (Playwright snapshot existing React deck to standalone HTML, PDF, or Vercel URL — keeps brand). Triggers on "/slide-deck," "/slides new," "/slides export," "/slides update," "/slides ppt," "draft a deck," "deck for [topic]," "talk on [topic]," "keynote on [topic]," "internal deck for [audience]," "convert this pptx," "export this deck."
+description: When you want to draft, update, convert, or prepare a user-run export of a slide deck for a React/Next.js slide system (${SLIDE_DECK_REPO:-$HOME/code/your-slide-deck-site}/src/app/slides/). Writes TypeScript Slide[] arrays using your primitives (Eyebrow, Heading, Accent, Body, BulletList, Divider, TwoCol, GradientText), 12 cycling brand gradients, optional sections for "where am I" context, and speaker notes. Inspired by zarazhangrui/frontend-slides — "show, don't tell" applied to narrative (presents 3 angles, you pick) plus density modes (speaker-led vs reading-first). Hosted Agent rendering/export fails closed until an asset-safe host renderer exists. Triggers on "/slide-deck," "/slides new," "/slides export," "/slides update," "/slides ppt," "draft a deck," "deck for [topic]," "talk on [topic]," "keynote on [topic]," "internal deck for [audience]," "convert this pptx," "export this deck."
 metadata:
-  version: 0.2.0
+  version: 0.2.2
 ---
 
 # /slide-deck — Draft, update, convert, and export branded React decks
 
-Authors React/TypeScript decks for `${SLIDE_DECK_REPO:-$HOME/code/your-slide-deck-site}/src/app/slides/<slug>/page.tsx` using the user's slide system. Branded output (no separate HTML pipeline) — when portable HTML/PDF is needed, export mode snapshots the rendered React deck via Playwright so the output is brand-perfect.
+Authors React/TypeScript decks for `${SLIDE_DECK_REPO:-$HOME/code/your-slide-deck-site}/src/app/slides/<slug>/page.tsx` using the user's slide system. The React deck is the source of truth. Hosted Agent can prepare an export handoff, but cannot drive a loopback Playwright renderer or publish assets until an asset-safe host action is advertised.
 
 ## Modes (pick one before Step 1)
 
@@ -16,7 +16,7 @@ Authors React/TypeScript decks for `${SLIDE_DECK_REPO:-$HOME/code/your-slide-dec
 | **new** | `/slide-deck new <topic>` (default) | Draft a new deck from a brief |
 | **update** | `/slide-deck update <slug>` | Modify an existing deck (with overflow guards) |
 | **ppt** | `/slide-deck ppt <path-to-pptx>` | Convert a legacy PPTX into a React deck |
-| **export** | `/slide-deck export <slug> [html\|pdf\|vercel]` | Snapshot a deck to HTML, PDF, or Vercel URL |
+| **export** | `/slide-deck export <slug> [html\|pdf\|vercel]` | Prepare a user-run render handoff or assemble supplied snapshots |
 
 For `update`, `ppt`, and `export`, skip to the corresponding mode section below. For `new`, continue through Steps 1–8.
 
@@ -123,20 +123,10 @@ The `<AUTHOR_HANDLE>` / `<AUTHOR_SITE>` tokens (close-slide footer) come from `$
 
 ## Step 7 — Preview
 
-After writing the files, check if your slide-deck dev server is running.
-
-```bash
-lsof -i :3000-3099 2>/dev/null | grep -E "LISTEN" | head
-```
-
-If a port is in use (portless-compatible — check `package.json` for the dev script naming):
-
-```bash
-# Suggested URL pattern
-echo "Preview at: http://${SLIDE_DECK_DEV_HOST:-localhost:3000}/slides/<slug>"
-```
-
-If no dev server is running, tell the user:
+Sandboxed shell cannot observe or reach the user's loopback dev server. Use an
+advertised host browser/process tool to preview only when that tool explicitly
+supports the route. Otherwise give the user the source path and this user-run
+handoff:
 
 ```bash
 cd ${SLIDE_DECK_REPO:-$HOME/code/your-slide-deck-site} && npm run dev
@@ -188,9 +178,8 @@ Modify an existing deck without breaking it. Risks: overflowing slides, exceedin
 
 Convert a legacy PPTX (client deck, conference template) into the user's React system.
 
-1. **Extract content** via `python3` and `python-pptx`:
+1. **Extract content** via `python3` and a preinstalled `python-pptx`:
    ```bash
-   pip install python-pptx 2>/dev/null
    python3 -c "
    from pptx import Presentation
    import json, sys
@@ -225,31 +214,27 @@ Convert a legacy PPTX (client deck, conference template) into the user's React s
 
 ## Mode: export
 
-Snapshot a deck rendered in your slide-site dev server to portable HTML / PDF / Vercel URL. Output is brand-perfect because it's screenshots of your actual rendered React deck.
+Hosted Agent rendering/export is `execution_unavailable` until an advertised
+host action can reach the dev server and return bounded image artifacts. Never
+run a browser driver against loopback from shell. Prepare the user-run handoff
+in `references/export.md` instead.
 
 **Output options:**
 - `html` — standalone HTML file with snapshots as inline `<img>`, keyboard nav (arrow keys) baked in
 - `pdf` — combined slide snapshots
-- `vercel` — push standalone HTML to a Vercel project for a shareable URL
+- `vercel` — currently returns `execution_unavailable`; hand off the standalone
+  HTML folder for the user to publish through an approved hosting process
 
-**Flow** (full details in `references/export.md`):
+**Flow** (full handoff details in `references/export.md`):
 
-1. **Verify dev server**: confirm `${SLIDE_DECK_DEV_HOST:-localhost:3000}/slides/<slug>` loads. If not, prompt the user to `cd ${SLIDE_DECK_REPO:-$HOME/code/your-slide-deck-site} && npm run dev`.
-2. **Count slides**: read `page.tsx`, count entries in the `slides` array.
-3. **Run Playwright snapshot**:
-   ```bash
-   bash references/export.md script: snapshot-deck <slug> <count>
-   ```
-   - Launches headless Chromium at 1920×1080
-   - Loads `http://${SLIDE_DECK_DEV_HOST:-localhost:3000}/slides/<slug>?present=1` (presenter mode hides chrome)
-   - Sets `localStorage["slides:/slides/<slug>"] = "0"` to start at slide 0
-   - Loops: screenshot → keyboard ArrowRight → wait — for N slides
-   - Saves PNGs to `~/Documents/slide-exports/<slug>-<YYYY-MM-DD>/slide-<n>.png`
-4. **Combine** per output type:
-   - `html` → wrap snapshots in a minimal HTML shell with arrow-key navigation
-   - `pdf` → use `magick` (ImageMagick) or `img2pdf` to combine PNGs
-   - `vercel` → `vercel deploy ~/Documents/slide-exports/<slug>-<date>/`
-5. **Report** path / URL.
+1. Count slides by reading `page.tsx`.
+2. Report `execution_unavailable` for live rendering and name the missing host
+   capability.
+3. Give the user the expected output directory, route, slide count, and
+   prerequisites for their approved local export process.
+4. If the user later supplies PNG snapshots as local files, assemble portable
+   HTML or PDF locally. Hosted publication remains a separate unavailable
+   mutation.
 
 **Caveats** (mention to the user):
 - Animations and presenter view are not preserved — exports are static snapshots.
@@ -270,9 +255,9 @@ Snapshot a deck rendered in your slide-site dev server to portable HTML / PDF / 
 | `/slide-deck rewrite <slug> <slide-id>` | update | Edit one slide |
 | `/slide-deck update <slug>` | update | General modification with overflow guards |
 | `/slide-deck ppt <pptx-path>` | ppt | Convert legacy PPTX → React deck |
-| `/slide-deck export <slug> html` | export | Snapshot to standalone HTML |
-| `/slide-deck export <slug> pdf` | export | Snapshot to PDF |
-| `/slide-deck export <slug> vercel` | export | Snapshot + Vercel deploy → shareable URL |
+| `/slide-deck export <slug> html` | export | Return the render handoff; assemble supplied PNGs into HTML |
+| `/slide-deck export <slug> pdf` | export | Return the render handoff; assemble supplied PNGs into PDF |
+| `/slide-deck export <slug> vercel` | export | Return `execution_unavailable` for rendering and hosted publication |
 | `/slide-deck preview <slug>` | — | Just check the deck URL |
 
 ## Composes with
@@ -291,7 +276,8 @@ Snapshot a deck rendered in your slide-site dev server to portable HTML / PDF / 
 - **Density modes matter more than aesthetic.** A speaker-led deck has 3-word slides and 5-line speaker notes. A reading-first deck (leave-behind, async) reverses it. Same content, opposite artifact. Ask which mode before drafting.
 - **Slide text is *abbreviated spoken*.** Both pass the read-aloud test. If a slide reads like a memo, it's wrong. If speaker notes read like slides, they're wrong.
 - **Overflow guards on update mode.** Don't blindly cram more content into an existing slide — if the addition tips the slide over its target word count or line count, propose splitting the slide or trimming existing content. Silently overflowing produces cramped decks.
-- **Presenter-view stripped for exports.** Playwright snapshots the `?present=0` mode so the export is clean. Never export the presenter view.
+- **Presenter-view stripped for user-run exports.** The approved local exporter should snapshot `?present=0` so the export is clean.
 - **Brand-perfect > portable.** The React deck is the source of truth. HTML/PDF/Vercel exports are snapshots for sharing — animations, interactions, presenter view live only in the React version.
 - **1920×1080 default, 1280×720 for previews.** Full-res snapshots run 30-50 MB for a 20-slide deck; low-res halves that at minimal visual loss.
-- **Deploy is a real-money operation.** Export mode's `vercel` path prompts before deploying. Auto-renew is on for domains + Vercel projects.
+- **Hosted publication is not an asset-safe typed action yet.** Never fall back
+  to a hosting CLI; return the local artifact for the user to publish.

@@ -2,7 +2,7 @@
 name: deep-research
 description: "When you want multi-source, multi-step research on a topic — competitor research before a sales call, market research for a new business idea, positioning angles, due diligence on a partnership or podcast guest, tech decision research (which DB, which auth), or any \"I need to actually understand X.\" Combines WebSearch, WebFetch, Firecrawl (magister-firecrawl), /last30days (Reddit/X/YouTube/HN/web recency), memory, and Notion. Outputs a structured brief with citations, contradictions, gaps, and recommended next steps. Archives every research run to ~/.config/makerskills/deep-research/archive/ so past work is searchable. Triggers on \"/deep-research,\" \"research X,\" \"investigate X,\" \"do a deep dive on X,\" \"look into X,\" \"what's actually happening with X,\" \"due diligence on X,\" \"validate this market.\" Differs from a one-shot WebSearch: this is multi-pass with verification."
 metadata:
-  version: 0.2.0
+  version: 0.2.1
 ---
 
 # /deep-research — Multi-source research with archive
@@ -24,12 +24,11 @@ Pick from this menu based on the question type. Note which sources you'll hit an
 
 | Source | When to use | Tool |
 |---|---|---|
-| Web search (Google) | Authoritative articles, docs, official statements | `WebSearch` |
-| `/last30days` | What people are *actually saying* right now — Reddit, X, YouTube, HN, web recency | `Skill({skill: "last30days", args: "<topic>"})` |
-| Specific URLs | When the user hands over starting URLs | `WebFetch` |
-| JS-heavy pages, full-site reads | Pricing pages, product tours, profiles, multi-page crawls | `magister-firecrawl` skill (gateway proxy; renders JS). Auth-walled pages need the attended `browser` tool (user's connected Chrome) |
+| Web search | Authoritative articles, docs, official statements | An advertised typed Magister search/research skill |
+| Recent social/web discussion | What people are saying right now | `magister-social-research` or another advertised typed action; otherwise explicit unavailable state |
+| Specific URLs / JS-heavy pages | User-supplied starting pages, pricing, product tours | `magister-firecrawl` or `magister-web-context` through its typed action; auth-walled pages require an advertised attended browser action |
 | Memory | Prior research / decisions / context the user already captured | grep `~/.claude/memory/` |
-| Notion | If the topic touches a known Notion workspace | Direct Notion API (key in `$NOTION_API_KEY`, see `reference_notion_api.md`) |
+| Notion | If the topic touches a known Notion workspace | Load `magister-notion` and use its typed read action; the Gateway owns credentials |
 | Research archive | Prior `/deep-research` runs that touched this topic | grep `${MAKERSKILLS_CONFIG:-$HOME/.config/makerskills}/deep-research/archive/` |
 
 Run discovery passes **in parallel** where possible. Sequential only when one source needs another's output (e.g., Firecrawl-scrape a URL discovered by WebSearch).
