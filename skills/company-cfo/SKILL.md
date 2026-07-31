@@ -2,7 +2,7 @@
 name: company-cfo
 description: Monthly CFO workflow for a company or agency — pull raw data from bank + payment processor + payroll + expense management, categorize and reconcile, compute end-of-month cash via transaction-sum method, update a scenario projector for forward forecasting, write the monthly snapshot report, surface decisions to leadership. Modes — monthly (default; the standing report), weekly (thin cash pulse), scenario (ad-hoc modeling in the projector), pickup (resume where the prior run left off). Anonymized team-scope sibling to personal-cfo (which handles personal household finances). Composes with company-brain (report gets stored + wiki-indexed there), toolify (wire company-specific data sources), loopify (schedule the monthly + weekly runs). Triggers on "/company-cfo," "/cfo," "monthly cash report," "do the CFO snapshot," "CFO monthly," "let's run CFO," "cash projection," "runway forecast," "monthly financials," "cash pulse."
 metadata:
-  version: 0.1.1
+  version: 0.1.2
 ---
 
 # /company-cfo — Monthly company CFO workflow
@@ -177,9 +177,14 @@ git checkout -b feature/YYYY-MM-snapshot
 git add reports/monthly/YYYY-MM.md scenarios/index.html CLAUDE.md   # targeted
 git status --short                                                    # verify no data/ or .env files staged
 git commit -m "YYYY-MM monthly snapshot"
-git push -u origin feature/YYYY-MM-snapshot
-gh pr create --base main --title "YYYY-MM monthly snapshot"
 ```
+
+Remote branch publication and pull-request creation are external mutations.
+Use the reviewed `magister-github` typed integration and its exact approval
+flow only when it supports the exact operation. Otherwise return
+`execution_unavailable` and give the user the local branch/commit name to push
+and open themselves. Never expose or upload `data/`, bank rows, payroll rows,
+or secret files through a generic integration request.
 
 **Never `git add -A` in `${COMPANY_CFO_ROOT}`.** A silent `data/` file leak would push bank transaction history + partner distribution ACHs to a git remote. Targeted adds only.
 

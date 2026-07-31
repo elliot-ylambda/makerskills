@@ -2,7 +2,7 @@
 name: slide-deck
 description: When you want to draft, update, convert, or export a slide deck for a React/Next.js slide system (${SLIDE_DECK_REPO:-$HOME/code/your-slide-deck-site}/src/app/slides/). Writes TypeScript Slide[] arrays using your primitives (Eyebrow, Heading, Accent, Body, BulletList, Divider, TwoCol, GradientText), 12 cycling brand gradients, optional sections for "where am I" context, and speaker notes. Inspired by zarazhangrui/frontend-slides — "show, don't tell" applied to narrative (presents 3 angles, you pick) plus density modes (speaker-led vs reading-first). Four modes — new (draft from brief), update (modify existing, with overflow guards), ppt (convert legacy PPTX → React deck), export (Playwright snapshot existing React deck to standalone HTML, PDF, or Vercel URL — keeps brand). Triggers on "/slide-deck," "/slides new," "/slides export," "/slides update," "/slides ppt," "draft a deck," "deck for [topic]," "talk on [topic]," "keynote on [topic]," "internal deck for [audience]," "convert this pptx," "export this deck."
 metadata:
-  version: 0.2.0
+  version: 0.2.1
 ---
 
 # /slide-deck — Draft, update, convert, and export branded React decks
@@ -188,9 +188,8 @@ Modify an existing deck without breaking it. Risks: overflowing slides, exceedin
 
 Convert a legacy PPTX (client deck, conference template) into the user's React system.
 
-1. **Extract content** via `python3` and `python-pptx`:
+1. **Extract content** via `python3` and a preinstalled `python-pptx`:
    ```bash
-   pip install python-pptx 2>/dev/null
    python3 -c "
    from pptx import Presentation
    import json, sys
@@ -230,11 +229,14 @@ Snapshot a deck rendered in your slide-site dev server to portable HTML / PDF / 
 **Output options:**
 - `html` — standalone HTML file with snapshots as inline `<img>`, keyboard nav (arrow keys) baked in
 - `pdf` — combined slide snapshots
-- `vercel` — push standalone HTML to a Vercel project for a shareable URL
+- `vercel` — currently returns `execution_unavailable`; hand off the standalone
+  HTML folder for the user to publish through an approved hosting process
 
 **Flow** (full details in `references/export.md`):
 
-1. **Verify dev server**: confirm `${SLIDE_DECK_DEV_HOST:-localhost:3000}/slides/<slug>` loads. If not, prompt the user to `cd ${SLIDE_DECK_REPO:-$HOME/code/your-slide-deck-site} && npm run dev`.
+1. **Verify rendering surface**: sandboxed shell cannot reach loopback. Use an
+   advertised host browser/process tool; if none exists, ask the user to start
+   and verify the deck in their own terminal/browser.
 2. **Count slides**: read `page.tsx`, count entries in the `slides` array.
 3. **Run Playwright snapshot**:
    ```bash
@@ -248,7 +250,8 @@ Snapshot a deck rendered in your slide-site dev server to portable HTML / PDF / 
 4. **Combine** per output type:
    - `html` → wrap snapshots in a minimal HTML shell with arrow-key navigation
    - `pdf` → use `magick` (ImageMagick) or `img2pdf` to combine PNGs
-   - `vercel` → `vercel deploy ~/Documents/slide-exports/<slug>-<date>/`
+   - `vercel` → return `execution_unavailable` and provide the portable HTML
+     folder for user-side publication
 5. **Report** path / URL.
 
 **Caveats** (mention to the user):
@@ -272,7 +275,7 @@ Snapshot a deck rendered in your slide-site dev server to portable HTML / PDF / 
 | `/slide-deck ppt <pptx-path>` | ppt | Convert legacy PPTX → React deck |
 | `/slide-deck export <slug> html` | export | Snapshot to standalone HTML |
 | `/slide-deck export <slug> pdf` | export | Snapshot to PDF |
-| `/slide-deck export <slug> vercel` | export | Snapshot + Vercel deploy → shareable URL |
+| `/slide-deck export <slug> vercel` | export | Return the portable HTML folder plus `execution_unavailable` for hosted publication |
 | `/slide-deck preview <slug>` | — | Just check the deck URL |
 
 ## Composes with
@@ -294,4 +297,5 @@ Snapshot a deck rendered in your slide-site dev server to portable HTML / PDF / 
 - **Presenter-view stripped for exports.** Playwright snapshots the `?present=0` mode so the export is clean. Never export the presenter view.
 - **Brand-perfect > portable.** The React deck is the source of truth. HTML/PDF/Vercel exports are snapshots for sharing — animations, interactions, presenter view live only in the React version.
 - **1920×1080 default, 1280×720 for previews.** Full-res snapshots run 30-50 MB for a 20-slide deck; low-res halves that at minimal visual loss.
-- **Deploy is a real-money operation.** Export mode's `vercel` path prompts before deploying. Auto-renew is on for domains + Vercel projects.
+- **Hosted publication is not an asset-safe typed action yet.** Never fall back
+  to a hosting CLI; return the local artifact for the user to publish.

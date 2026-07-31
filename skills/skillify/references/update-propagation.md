@@ -54,7 +54,8 @@ Example: a "voice should be spoken aloud" rule won't grep-match in `pm` (project
 Use the skill's *output type* as the heuristic:
 - **Writes user-facing text** (drafts posts, slides, summaries): voice rules apply
 - **Generates structured data** (boards, archives, schemas): voice rules usually don't apply
-- **Wraps an external tool** (yt-dlp, ffmpeg, Playwright): tool rules apply
+- **Wraps an external acquisition or rendering tool**: transport and local-tool
+  rules apply; remote acquisition still requires a reviewed typed action
 
 ## Output: confidence-tagged candidate list
 

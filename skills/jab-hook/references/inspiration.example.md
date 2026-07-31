@@ -69,7 +69,8 @@ When drafting a `promo` or `educational` post:
 
 1. The skill determines the target platform(s) of the draft (X, LinkedIn, both)
 2. Picks 1–2 accounts from the matching section(s) whose audience overlaps the property being promoted
-3. Pulls recent posts via `social-fetch` (uses `agent-browser` for LinkedIn if no paid keys; ScrapeCreators for full X threads when `SCRAPECREATORS_API_KEY` is set)
+3. Pulls recent posts via the typed services advertised by `social-fetch`; when
+   the needed content is unavailable, asks the user to paste examples
 4. Extracts: hook openers, structural patterns, CTA styles, post length, line-break rhythm
 5. Chooses one pattern that fits the property + content type + platform conventions
 6. Applies the pattern to YOUR voice — don't mimic their voice, only the structure
@@ -78,8 +79,8 @@ Extracted patterns accumulate in `${MAKERSKILLS_CONFIG:-$HOME/.config/makerskill
 
 ## Notes
 
-- LinkedIn often blocks unauthenticated scraping. If `agent-browser` walls, fall back to: pasting examples, pulling from their public newsletters, or scraping their X accounts.
-- X scraping needs `$SCRAPECREATORS_API_KEY` for full threads. Free strategy returns preview only.
+- If the typed service cannot retrieve a LinkedIn post or full X thread, fall
+  back to pasted examples. Never request a provider key or raw browser session.
 - Never copy phrasing — only structure, format, hook archetype.
 - Inspiration is a starting point. Your voice rules in `voice.md` (+ `voice.local.md` overlay) always override format choices.
 - Some patterns transfer across platforms (story-open hooks); others don't (LinkedIn carousels ≠ X threads).

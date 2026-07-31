@@ -1,127 +1,114 @@
 ---
 name: social-fetch
-description: "When you or another skill needs to fetch the content of a social media post by URL — tweet, X thread, LinkedIn post, Instagram post, TikTok video, Bluesky post, Reddit thread, Mastodon status, Threads post, Hacker News thread. Returns normalized structured data (author, posted_at, text, engagement counts, media URLs, replies if requested) regardless of platform. Tries strategies in order: direct API (Bluesky, Mastodon, HN, Reddit), Firecrawl rendered fetch (public pages), Wayback Machine (older posts), paid APIs (ScrapeCreators / Apify — only if env keys present). Triggers on \"/social-fetch <url>,\" \"fetch this tweet,\" \"fetch this post,\" \"what does this LinkedIn say,\" \"read this thread,\" \"pull this post.\" Used by deep-research (citing specific posts), jab-hook (inspiration account analysis), business-brainstorm (competitor / operator commentary)."
+description: "Fetch and normalize a public social post by URL using reviewed typed Magister social-research or page-extraction actions. Supports the public routes documented by magister-social-research and degrades explicitly when a platform is private, deleted, auth-walled, or lacks a typed route. Never uses shell networking or user API keys."
 metadata:
-  version: 0.1.1
+  version: 0.2.1
 ---
 
-# /social-fetch — Pull any social post by URL
+# /social-fetch — Pull a public social post by URL
 
-Normalized fetcher for social posts across platforms. Detects platform from URL, tries strategies in order, returns the same JSON shape regardless of source.
+Normalize public post data for downstream research without exposing provider
+credentials or giving sandboxed shell network access.
+
+## Required typed transport
+
+- Shell networking is unavailable. Never call a public API, provider URL,
+  downloader, browser driver, SDK, or archive from shell.
+- Use `magister_integration_read` only with routes documented by
+  `magister-social-research`, `magister-firecrawl`, or another reviewed skill
+  advertised in the current session.
+- Credentials, project identity, host selection, policy, billing, and response
+  bounds remain Gateway-owned. Never ask the user to add an API key to the
+  machine environment.
+- If no reviewed typed route represents the source, return
+  `execution_unavailable` and ask the user to paste/export the post.
+- Binary media download is unsupported by the JSON transport. Return media
+  metadata/URLs only; do not download them.
 
 ## Step 1 — Detect platform
 
 | URL pattern | Platform |
 |---|---|
-| `x.com/<user>/status/<id>` or `twitter.com/<user>/status/<id>` | **x** (Twitter) |
-| `linkedin.com/posts/<slug>` or `linkedin.com/feed/update/urn:li:activity:<id>` | **linkedin** |
-| `linkedin.com/in/<handle>` (profile, recent activity) | **linkedin-profile** |
-| `instagram.com/p/<id>` or `instagram.com/reel/<id>` | **instagram** |
-| `tiktok.com/@<user>/video/<id>` | **tiktok** |
-| `bsky.app/profile/<handle>/post/<rkey>` | **bluesky** |
-| `reddit.com/r/<sub>/comments/<id>/...` | **reddit** |
-| `<mastodon-instance>/@<user>/<id>` (e.g. mastodon.social, hachyderm.io) | **mastodon** |
-| `threads.net/@<user>/post/<id>` | **threads** |
-| `news.ycombinator.com/item?id=<id>` | **hn** |
-| `youtube.com/watch?v=<id>` or `youtu.be/<id>` | → defer to `watch-video` |
+| `x.com/<user>/status/<id>` or `twitter.com/...` | X |
+| `linkedin.com/posts/...` or `linkedin.com/feed/update/...` | LinkedIn |
+| `instagram.com/p/...` or `instagram.com/reel/...` | Instagram |
+| `tiktok.com/@.../video/...` | TikTok |
+| `bsky.app/profile/.../post/...` | Bluesky |
+| `reddit.com/r/.../comments/...` | Reddit |
+| `<mastodon-instance>/@<user>/<id>` | Mastodon |
+| `threads.net/@.../post/...` | Threads |
+| `news.ycombinator.com/item?id=...` | Hacker News |
+| YouTube URL | Defer to the typed social-research transcript route or request an attached file |
 
-If the URL doesn't match any pattern, ask the user what platform it is.
+Reject malformed or non-public URLs. If the platform is ambiguous, ask.
 
-## Step 2 — Pick strategy chain
+## Step 2 — Select the reviewed route
 
-Read `references/strategies.md` for the per-platform strategy chain. Each platform has 2–5 strategies tried in order.
+Read [references/strategies.md](references/strategies.md). Prefer the most
+specific typed social-research route, then the typed Firecrawl public-page
+extractor. Do not invent a direct API fallback.
 
-Key principles:
-- **Free strategies first** (direct APIs, Firecrawl rendered fetch via `magister-firecrawl`)
-- **Paid only as fallback** (ScrapeCreators / Apify) — and only if the env key is set
-- **Bluesky / Mastodon / HN / Reddit are free + reliable** (public APIs)
-- **X / LinkedIn / Instagram / TikTok / Threads** need paid or scraping fallback for full data
+For each typed attempt:
 
-## Step 3 — Execute strategy
+1. Preserve the canonical input URL.
+2. Use only the documented relative path, ordered query pairs, and bounded JSON
+   body.
+3. On a retryable upstream failure, retry once according to the skill policy.
+4. On an auth wall, private/deleted content, unsupported route, or exhausted
+   attempts, return a precise unavailable result.
 
-For each strategy in the chain:
-1. Try it
-2. If success: parse → normalize → return
-3. If failure (404, 402, auth wall, empty response): note the failure and try the next strategy
+## Step 3 — Normalize
 
-After exhausting the chain, return a clear error: which strategies were tried, why each failed, and what's needed to unlock (e.g., "Add `$SCRAPECREATORS_API_KEY` for X — see `references/auth-keys.md`").
-
-## Step 4 — Normalize output
-
-Return this shape regardless of platform (see `references/output-schema.md` for the full spec + platform-specific examples):
+Return the shape in [references/output-schema.md](references/output-schema.md):
 
 ```json
 {
-  "platform": "x",
-  "url": "https://x.com/example/status/1234567890",
+  "platform": "linkedin",
+  "url": "https://www.linkedin.com/posts/example",
   "fetched_at": "2026-06-17T14:35:00Z",
   "raw_source": "scrapecreators",
-  "author": {
-    "handle": "@example",
-    "name": "the user Ganim",
-    "verified": true
-  },
-  "posted_at": "2026-06-17T16:53:00Z",
-  "text": "The 80/20 of a useful AI second brain: ...",
+  "author": {"handle": null, "name": "Example", "verified": null},
+  "posted_at": null,
+  "text": "Post text",
   "media": [],
   "engagement": {
-    "likes": 51,
-    "reposts": 13,
-    "replies": 9,
-    "bookmarks": 7,
-    "views": 32700
+    "likes": null,
+    "reposts": null,
+    "replies": null,
+    "bookmarks": null,
+    "views": null
   },
-  "is_thread": true,
+  "is_thread": false,
   "thread": [],
   "replies": []
 }
 ```
 
-Fields with no equivalent on a platform (e.g., `bookmarks` on Mastodon) get `null`, not `0`. Missing data is different from zero data.
+Use `null`, not `0`, for unavailable metrics. Do not include the raw provider
+response, credentials, or hidden/private data.
 
-## Step 5 — Optional enrichments
+## Optional depth
 
-Based on flags / asks:
-
-| Flag | Behavior |
-|---|---|
-| `--with-replies` | Fetch top-level replies (1 hop). Costs extra API quota. |
-| `--thread` | If the post is part of a thread by the same author, fetch the whole thread. |
-| `--raw` | Include the raw API/scrape response in the output (for debugging) |
-| `--media` | Download media files (images/videos) to `~/Documents/social-fetches/<platform>-<id>/` |
-
-Default: just the post itself, no replies, no media download (just URLs).
-
-## Step 6 — Cache (optional)
-
-If `~/Documents/social-fetches/_cache/` exists, cache successful fetches there by `{platform}-{id}.json` for 24h. Saves API quota when the same post is referenced repeatedly across skills.
-
-Skip cache if `--no-cache` flag is set or for `--with-replies` / `--thread` (likely-stale).
-
-## Composes with
-
-- `deep-research` — cite specific posts in research briefs. When research surfaces a relevant tweet/post URL, fetch and include in the brief.
-- `jab-hook` — pull recent posts from inspiration accounts for deeper format analysis (should call this skill).
-- `business-brainstorm` — pull competitor / operator commentary as evidence during scoring.
-- `second-brain` — capture a post into `raw/` with the `tweet-` / `bookmark-` prefix; the structured output makes for cleaner raw files than a screenshot or copy-paste.
-- `watch-video` — for YouTube URLs (or any video — Loom, Vimeo, Riverside, MP4), route there instead.
+- Replies/thread depth is supported only when the exact reviewed route returns
+  it; never fan out to unreviewed endpoints.
+- Media metadata may be returned as untrusted external provenance. Media bytes
+  require a future typed asset transport and otherwise return
+  `unsupported_operation`.
+- Local caching is optional for normalized non-sensitive output, but it must
+  not contain tokens or provider responses and must never substitute for a
+  fresh result when recency matters.
 
 ## Known limits
 
-- **X**: free strategies return tweet preview only (text, author, basic engagement). Full thread + replies need `$SCRAPECREATORS_API_KEY` or `$APIFY_API_TOKEN`.
-- **LinkedIn**: rendered fetches of public pages are unreliable (login walls). Specific post URLs (`linkedin.com/posts/...`) usually need the paid fallback (ScrapeCreators).
-- **Instagram / TikTok / Threads**: heavy anti-bot. Paid fallback strongly recommended.
-- **Bluesky / Mastodon / HN / Reddit**: free + reliable.
-- **Private / deleted posts**: nothing helps. Try Wayback Machine for deleted content.
+- LinkedIn, X, Instagram, TikTok, and Threads may be auth-walled or
+  anti-automation protected.
+- Private/deleted posts are a hard stop.
+- A generic public endpoint is not authorization to bypass the typed transport.
+- Do not report a transport failure as a connection problem for company-paid
+  social-research services.
 
-If a platform consistently fails on free strategies and the user uses it often, prompt to set up the paid key (see `references/auth-keys.md`).
+## Composes with
 
-## Notes on quality
-
-- **Strategy chain, not single-source.** Every platform has a fallback ladder (native oEmbed → Firecrawl rendered fetch → SCS API → Apify). If one step fails, degrade gracefully to the next. Never fail hard on the first attempt.
-- **Structured output over screenshots.** Downstream skills (jab-hook, deep-research, second-brain) need JSON with author + text + engagement fields, not an image. Even when the underlying strategy is a screenshot, extract text before returning.
-- **Cache aggressively, invalidate honestly.** 24h TTL on `~/Documents/social-fetches/_cache/` prevents API burn when the same post is referenced across multiple skills in a session. `--with-replies` / `--thread` skip cache because replies age fast.
-- **Respect paid-key economics.** ScrapeCreators / Apify calls cost real money. Prompt before hitting paid strategies if the user hasn't confirmed they want depth. Free strategies first, always.
-- **Media download is opt-in.** Default is post text only; `--media` downloads images/videos. Silent media downloads eat disk quickly.
-- **Private / deleted content is a hard stop.** No strategy chain rescues private accounts or deleted posts. Suggest Wayback Machine for deleted content and stop.
-- **Rate-limits are per-platform.** X free strategies hit rate limits fast; LinkedIn blocks anonymous fetches quickly. Space out calls in loops or the workflow degrades to worse-than-manual.
+- `deep-research`, `jab-hook`, and `business-brainstorm` for cited evidence.
+- `second-brain` for a normalized text capture.
+- `watch-video` for local/attached video analysis.

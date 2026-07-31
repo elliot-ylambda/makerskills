@@ -20,12 +20,11 @@ Run this before adapting. Skill defaults to **stop** on unclear or restrictive l
 | **No LICENSE file** | 🟡 Warn | Default copyright = no rights. Don't copy. Ask author OR rewrite from scratch using only the *ideas* (not the text). |
 | **Unclear / conflicting** | 🟡 Warn | Surface to the user for a call. |
 
-## Detection script
+## Detection
 
-```bash
-# In the source repo
-curl -s "https://api.github.com/repos/<owner>/<repo>/license" | jq -r .license.spdx_id
-```
+For a GitHub source, use `magister_integration_read` with `service=github` and
+`GET repos/<owner>/<repo>/license`, following the `magister-github` skill. Do
+not query GitHub from shell. For a local source, read its LICENSE file directly:
 
 Or read the LICENSE file directly:
 

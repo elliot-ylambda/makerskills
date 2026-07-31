@@ -42,15 +42,18 @@ When drafting a `promo` or `educational` post:
 1. **Determine the target platform(s)** — X, LinkedIn, both, etc.
 2. **Pick 1–2 accounts from the matching platform section(s)** whose audience overlaps the property being promoted
 3. **Pull their recent posts via `social-fetch`**
-   - LinkedIn: `agent-browser` with modal dismissal (no API key needed) or ScrapeCreators if `SCRAPECREATORS_API_KEY` set for full post data
-   - X: ScrapeCreators recommended; free tier returns preview only
+   - Use only the typed services advertised by `social-fetch`; credentials stay
+     Gateway-owned.
+   - If the typed source cannot return the needed post/thread, ask the user to
+     paste examples instead of falling back to a browser or provider key.
 4. **Extract**: hook openers, structural patterns (numbered list / contrarian-take / story-open / thread mechanics), CTA styles, post length, line-break rhythm
 5. **Choose ONE pattern** that fits the property + content type + platform conventions
 6. **Apply the pattern to YOUR voice** — don't mimic their voice, only the structure
 
 ## Notes
 
-- LinkedIn often blocks unauthenticated scraping. If `agent-browser` walls, fall back to: pasting examples, pulling from their public newsletters, or scraping their X accounts.
+- If a typed source cannot retrieve LinkedIn content, fall back to pasted
+  examples or other content already supplied by the user.
 - Never copy phrasing — only structure, format, hook archetype.
 - Inspiration is a starting point. Your voice rules in `voice.md` (+ `voice.local.md` overlay) always override format choices.
 - Some patterns transfer across platforms (story-open hooks); others don't (LinkedIn carousels won't work on X). The `patterns.local.md` platform tag helps the skill respect the boundary.

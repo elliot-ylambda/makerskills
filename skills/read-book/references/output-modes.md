@@ -183,13 +183,10 @@ Triggered by `--render pdf` or `--render html` flag on the invocation. Post-proc
 
 ### Prerequisites
 
-```bash
-# One-time
-brew install pandoc                                    # required
-brew install --cask basictex                           # required for PDF (smaller than full mactex)
-# After basictex install, run once:
-sudo tlmgr update --self && sudo tlmgr install collection-fontsrecommended
-```
+Pandoc and a compatible PDF engine must already be installed by the user or
+image build. If either is absent, report the prerequisite and stop that render
+path; do not run an operating-system or language package manager from
+sandboxed shell.
 
 ### Commands
 

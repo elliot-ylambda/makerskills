@@ -2,7 +2,7 @@
 name: pm
 description: When you want to manage projects across your businesses using a kanban + Eisenhower methodology. One kanban per business (whatever portfolio of businesses, projects, or initiatives you run). Tool-agnostic — connects via API/MCP to whatever PM tool each business uses (Notion, GitHub Projects, Plane, Linear, Obsidian file-based, or manual mode). Async-first output. Six modes — setup (scaffold a new board for a business), triage (Eisenhower-sort the backlog), next (pick the next thing to work on, single board or across all), status (paste-ready async snapshot), unblock (diagnose Review/Blocked column), weekly (Friday pulse + week planning). Triggers on "/pm," "/pm setup," "/pm triage," "/pm next," "/pm status," "/pm unblock," "/pm weekly," "what should I work on next," "kanban status," "Eisenhower this," "triage my backlog," "what's blocked."
 metadata:
-  version: 0.1.1
+  version: 0.1.2
 ---
 
 # /pm — Project management across the portfolio
@@ -73,10 +73,12 @@ Read the relevant section of `references/adapters.md` for the tool. Each adapter
 - Add a comment / note
 
 Adapters use:
-- **Notion** → `$NOTION_API_KEY` (already in zshenv). Database with `Status` select property.
-- **GitHub Projects** → `gh` CLI (already authed). `gh project item-list`, `gh project item-edit`.
-- **Plane** → Plane API (needs `$PLANE_API_KEY` and workspace slug).
-- **Linear** → Linear MCP or API key.
+- **Notion** → reviewed `magister-notion` typed actions; credentials remain
+  Gateway-owned.
+- **GitHub Projects** → reviewed `magister-github` typed actions when the exact
+  Projects route is allowlisted.
+- **Plane** → `execution_unavailable` until a reviewed adapter is advertised.
+- **Linear** → `execution_unavailable` until a reviewed adapter is advertised.
 - **Obsidian** → local kanban markdown files in the vault. Read/write directly.
 - **Manual** → ask the user to paste the current board state; offer to write back to a local markdown file.
 

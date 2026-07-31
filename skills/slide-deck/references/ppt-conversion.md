@@ -4,9 +4,9 @@ Convert a legacy PowerPoint deck (client deck, conference template, vendor pitch
 
 ## Prerequisites
 
-```bash
-pip install python-pptx
-```
+`python-pptx` must already be installed by the user or image build. If it is
+missing, report the prerequisite; do not run a package installer from
+sandboxed shell.
 
 ## Step 1 — Extract content
 

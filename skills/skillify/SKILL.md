@@ -2,7 +2,7 @@
 name: skillify
 description: When you want to create, adapt, or update a Claude Code skill in one of your sibling repos (list your own repos in ~/.config/makerskills/skillify/repos.yaml; defaults to makerskills). Routes to the right mode automatically. Modes — CREATE (from-chat / from-video / from-dump / from-scratch) turns a workflow, brief, recording, or fresh idea into a new skill. ADAPT ports an external skill (GitHub URL, agentskills.io, local disk) into your namespace with three-bucket classification (keep/adapt/add) + license check + attribution. UPDATE improves existing skills from learnings with cross-skill propagation, memory-vs-skill triage, and semver discipline. Defers to Anthropic's guidance (compound-engineering:create-agent-skill, compound-engineering:skill-creator, compound-engineering:heal-skill) for schema and best-practice depth. Triggers on "/skillify," "create a skill," "make this a skill," "skill from this chat," "extract a skill from what we've been doing," "adapt this skill," "port this skill," "fork this skill," "borrow this skill," "update X skill," "apply this to the relevant skills," "propagate this learning," "improve [skill]," "fix [skill]," "iterate on [skill]." Part of the -ify trifecta (skillify / toolify / loopify) for extending Claude Code.
 metadata:
-  version: 0.2.0
+  version: 0.2.1
 ---
 
 # /skillify — Create, adapt, or update a skill
@@ -169,12 +169,15 @@ Accept:
 - **Local path** to an existing skill on disk (other plugins in `~/.claude/plugins/`)
 - **Pasted SKILL.md content**
 
-```bash
-# GitHub repo: clone shallow
-git clone --depth 1 <url> /tmp/skillify-adapt-<short-id>/
-# OR fetch a single file
-gh api -H "Accept: application/vnd.github.raw" repos/<owner>/<repo>/contents/SKILL.md > /tmp/adapt-source.md
-```
+For a GitHub source, load and follow `magister-github`. Retrieve the named
+repository files and commit metadata with `magister_integration_read` using
+reviewed relative GitHub API paths, then write the bounded returned text to the
+temporary work directory. Do not clone or invoke a credential-bearing GitHub
+CLI. If the required tree/file route is not supported, return
+`execution_unavailable` and ask for a local path or pasted content.
+
+Other remote sites require an advertised typed web-reading action; an arbitrary
+URL is never a shell download target.
 
 Capture the commit SHA so attribution can point at a stable revision.
 

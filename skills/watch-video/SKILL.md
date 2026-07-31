@@ -1,13 +1,22 @@
 ---
 name: watch-video
-description: When you want to extract content from a video — YouTube, Loom, Vimeo, Riverside, Zoom recording, local MP4, X/IG video, anything yt-dlp supports. Three depth modes user picks per invocation — transcript (just words, fast/free), visual (transcript + ffmpeg frame extraction + Claude vision pass on key moments), multimodal (Gemini native video ingestion if $GEMINI_API_KEY set, else dense Claude vision). Uses MLX-Whisper local on Mac for transcription, falls back to platform-provided transcripts when available (Loom, Riverside, YouTube auto-subs). Saves to ~/Documents/videos/<source>-<slug>-<date>/ and optionally captures summary to second-brain raw/ as call-/meeting-/note-. Triggers on "/watch-video <url>," "watch this video," "transcribe this loom," "analyze this video," "summarize this recording," "key moments from this," "what happened in this video." This skill replaces and broadens the prior youtube-transcript skill.
+description: When you want to transcribe or analyze a local/attached video. Three depth modes are available — transcript, visual, and dense local-frame analysis. Remote video acquisition and direct provider uploads require a reviewed typed asset/video action and otherwise return execution_unavailable. Saves outputs under ~/Documents/videos/ and can capture a summary to second-brain.
 metadata:
-  version: 0.2.2
+  version: 0.2.3
 ---
 
 # /watch-video — Transcribe and analyze any video at the depth you choose
 
 Replaces and broadens the prior `youtube-transcript` skill. YouTube is now one of many sources; depth is user-controlled.
+
+## Hosted Agent execution status
+
+Local file inspection, transcription, and frame extraction are supported.
+Remote URL download, authenticated platform transcript retrieval, provider file
+upload, and generated-media download are `execution_unavailable` until a
+reviewed typed asset/video action is advertised. Never use a downloader, direct
+HTTP client, provider key, or loopback service from shell. Ask the user to
+attach/download the video or paste a transcript instead.
 
 ## Step 1 — Parse input
 
@@ -17,7 +26,8 @@ Accept:
 - **Vimeo**: `vimeo.com/<id>`
 - **Riverside**: download URL or local file
 - **Zoom**: local `.mp4` from a downloaded recording
-- **X / IG / TikTok video**: URL — defers to `social-fetch` for metadata, uses yt-dlp for the file
+- **X / IG / TikTok video**: URL for identification only; ask the user to
+  attach/download the media unless a reviewed typed social asset action exists
 - **Local file**: any path to an `.mp4` / `.mov` / `.webm` / `.mkv`
 
 Detect source from URL pattern or file extension. If ambiguous, ask.
@@ -29,22 +39,14 @@ Detect source from URL pattern or file extension. If ambiguous, ask.
 | `/watch-video <url>` | **transcript** (default) | Clean text, metadata, optional chapters |
 | `/watch-video <url> transcript` | transcript | Same as default |
 | `/watch-video <url> visual` | visual | Transcript + frames at intervals + Claude vision pass identifying key moments |
-| `/watch-video <url> multimodal` | multimodal | Native video to Gemini (if `$GEMINI_API_KEY`), else dense Claude vision frame-by-frame |
+| `/watch-video <url> multimodal` | multimodal | Dense local-frame analysis through an advertised vision surface |
 
 If the depth isn't specified and the video is >10 minutes, ask before defaulting (visual/multimodal cost real money on long videos).
 
 ## Step 3 — Pull metadata
 
-For URL sources, use yt-dlp:
-
-```bash
-yt-dlp --print "%(title)s|%(uploader)s|%(duration_string)s|%(upload_date>%Y-%m-%d)s|%(description)s" \
-  --print "%(chapters)j" --skip-download "<url>"
-```
-
-Capture: title, uploader/channel, duration, upload date, description (first paragraph), chapters (JSON or null).
-
-For local files, use ffprobe:
+For remote URLs, return `execution_unavailable` and request an attached/local
+file or pasted transcript. For local files, use ffprobe:
 
 ```bash
 ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "<file>"
@@ -63,31 +65,17 @@ Where:
 
 ## Step 5 — Get the transcript
 
-**Backend selection** (in order):
+**Backend selection** (local/attached files only):
 
-1. **Platform-provided transcript** if it exists and looks complete:
-   - YouTube: `yt-dlp --write-sub --write-auto-sub --skip-download --sub-lang en --sub-format vtt`
-   - Loom: fetch via `https://www.loom.com/share/<id>` page metadata or Loom API if `$LOOM_API_KEY` set
-   - Riverside: built-in transcripts available on the recording's share page
-   - If platform transcript exists and has timestamps, use it. Skip Whisper.
-
-2. **MLX-Whisper local** (default fallback — fast on Mac M-series):
+1. **MLX-Whisper local** (default — fast on Mac M-series):
    ```bash
-   # Install once: pip install mlx-whisper
+   # Requires mlx-whisper to be preinstalled by the user or image build.
    python3 -c "import mlx_whisper; mlx_whisper.transcribe('<file>', path_or_hf_repo='mlx-community/whisper-large-v3-turbo')" \
      > "<workdir>/transcript-raw.json"
    ```
    Or via the CLI: `mlx_whisper <file> --model mlx-community/whisper-large-v3-turbo --output-dir <workdir>`
 
-3. **whisper.cpp** (further fallback if MLX unavailable)
-
-Download the video file first if it's a URL (use yt-dlp; Loom/Vimeo/YT all supported):
-
-```bash
-yt-dlp -f "bv*[height<=720]+ba/b[height<=720]" -o "<workdir>/video.%(ext)s" "<url>"
-```
-
-720p is plenty for transcription and frame analysis (smaller download, faster processing).
+2. **whisper.cpp** (fallback if MLX is unavailable)
 
 **Clean the transcript** (only needed for YouTube auto-subs which have rolling captions; Whisper output is already clean):
 
@@ -197,40 +185,11 @@ After moments are identified, synthesize the whole video into `<workdir>/summary
 
 ### Backend selection
 
-1. **Gemini native** if `$GEMINI_API_KEY` is set (much cheaper + faster than per-frame for long videos):
+Direct provider video upload is `execution_unavailable`; a provider API key is
+not a sandbox transport. Use **dense local frame analysis** only when the
+current model/tool surface accepts the extracted images:
 
-   **Default model: `gemini-3.5-flash`** (released May 2026, ~$1.50 input / $9 output per 1M tokens; ~$0.15/sec of video; beats 3.1 Pro on coding/agentic benchmarks at 4× the speed). Override to `gemini-3.1-pro` for brand audits / high-stakes analysis where details matter; `gemini-2.5-flash-lite` for bulk cheap processing.
-
-   ```bash
-   # Step 1: Upload video via Files API
-   FILE_URI=$(curl -s -X POST "https://generativelanguage.googleapis.com/upload/v1beta/files?key=$GEMINI_API_KEY" \
-     -H "X-Goog-Upload-Command: start, upload, finalize" \
-     -H "Content-Type: video/mp4" \
-     --data-binary "@<workdir>/video.mp4" | jq -r '.file.uri')
-
-   # Wait until file is ACTIVE (Gemini processes the video first)
-   while true; do
-     STATE=$(curl -s "$FILE_URI?key=$GEMINI_API_KEY" | jq -r '.state')
-     [ "$STATE" = "ACTIVE" ] && break
-     sleep 3
-   done
-
-   # Step 2: Generate content with the file + multimodal-analysis prompt
-   curl -s -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=$GEMINI_API_KEY" \
-     -H "Content-Type: application/json" \
-     -d "{
-       \"contents\":[{
-         \"parts\":[
-           {\"file_data\":{\"mime_type\":\"video/mp4\",\"file_uri\":\"$FILE_URI\"}},
-           {\"text\":\"<multimodal analysis prompt — see Step 7's summary template + use-case extensions>\"}
-         ]
-       }]
-     }"
-   ```
-
-   Files persist in Gemini Files API for ~48 hours — useful for re-querying the same video with different prompts.
-
-2. **Dense Claude vision fallback** if no Gemini key:
+1. **Dense vision pass**:
    - Frame cadence: 1 frame per **3s** (much denser than visual mode)
    - Batch through Claude vision with the multimodal-analysis prompt
    - Slower and more expensive than Gemini for long videos — warn the user before running on >10min content
@@ -280,12 +239,12 @@ In chat:
 
 | Source | Download | Built-in transcript | Notes |
 |---|---|---|---|
-| YouTube | `yt-dlp` | Auto-subs (`--write-auto-sub`) | Same as the prior youtube-transcript skill |
-| Loom | `yt-dlp` (Loom supported) | Yes — fetch via embed metadata or Loom API | Async screenshare focus — prime use case |
-| Vimeo | `yt-dlp` | Sometimes | Marketing/embed videos |
-| Riverside | Direct URL from export, or local file | Yes — Riverside generates them | Podcast episodes |
+| YouTube | User-attached local file | User may also paste a transcript | Remote acquisition is unavailable |
+| Loom | User-attached local file | User may also paste a transcript | Remote acquisition is unavailable |
+| Vimeo | User-attached local file | User may also paste a transcript | Remote acquisition is unavailable |
+| Riverside | User-attached local export | User may also attach its transcript | Remote acquisition is unavailable |
 | Zoom | Local `.mp4` (downloaded recordings) | Sometimes (Zoom audio transcript file) | Client calls |
-| X / IG / TikTok | Defer to `social-fetch` for metadata, yt-dlp for file | No | Short-form |
+| X / IG / TikTok | `social-fetch` for typed metadata; user attaches media | No | Short-form |
 | Local file | n/a | n/a | Drop a path |
 
 ## Composes with
@@ -303,11 +262,10 @@ In chat:
 | Failure | Response |
 |---|---|
 | Video unavailable / private / region-locked | Report and stop |
-| No subtitles + Whisper not installed | Tell the user: `pip install mlx-whisper` (Mac) |
-| ffmpeg missing (for visual/multimodal) | Tell the user: `brew install ffmpeg` |
+| No subtitles + Whisper not installed | Report the missing preinstalled local dependency and stop transcription |
+| ffmpeg missing (for visual/multimodal) | Report the missing preinstalled local dependency and stop frame extraction |
 | Vision pass returns empty / unclear | Lower the frame count, retry, or fall back to transcript-only with a note |
-| Multimodal requested but no `$GEMINI_API_KEY` and >30min video | Warn cost, offer to fall back to visual mode |
-| `yt-dlp` binary missing | `brew install yt-dlp` |
+| No advertised vision surface | Return `execution_unavailable` and offer transcript-only mode |
 
 ## Notes on quality
 
@@ -315,7 +273,8 @@ In chat:
 - **Platform transcript first, Whisper second.** YouTube auto-subs, Loom transcripts, Riverside built-in transcripts — all free + instant when they exist. Fall back to MLX-Whisper local only when nothing platform-provided works.
 - **MLX-Whisper local is the fast path on Mac.** M-series machines transcribe faster than real-time. Cloud Whisper is a distant second choice — costs money, network dependency, worse latency on typical durations.
 - **Frame cadence by source type.** Screen-share / demos need 1 frame per 5s (UI changes fast); talking-head podcasts need 1 per 30s (slow change). Default 15s if unsure. Wrong cadence = missed key moments OR wasted vision-pass cost.
-- **720p is plenty.** Downloading 1080p / 4K for transcription + frame analysis wastes bandwidth + storage. `yt-dlp -f "bv*[height<=720]+ba/b[height<=720]"` is the default.
+- **720p is plenty.** Ask the user for a 720p local attachment when possible;
+  larger source files waste local processing time and storage.
 - **Scene-change detection catches slide transitions.** When the video is a slide presentation, add `ffmpeg -vf "select='gt(scene,0.3)'"` to force a frame on each detected slide change — more reliable than pure time-based sampling.
 - **Multimodal cost warning is non-optional.** Gemini multimodal on a 60-min video is meaningfully expensive. Warn before running; offer transcript-only as fallback if the user isn't sure.
 - **Summary format includes routing hints.** `## Decisions flagged` + `## Action items flagged` sections signal `/decide` and `/pm` follow-ups. Downstream composability lives in the summary structure.

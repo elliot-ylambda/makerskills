@@ -1,24 +1,26 @@
 # Export reference
 
-Snapshot a rendered React deck to portable HTML / PDF / Vercel URL via Playwright. Output is brand-perfect because it's actual screenshots of the deck rendered in the dev server.
+Snapshot a rendered React deck to portable HTML or PDF via Playwright. Hosted
+publication remains unavailable until a reviewed asset/deployment action can
+bind the exact files.
 
 ## Prerequisites
 
 | Tool | Install | Check |
 |---|---|---|
-| Playwright | `npm install -g playwright && npx playwright install chromium` | `npx playwright --version` |
-| ImageMagick (for PDF) | `brew install imagemagick` | `magick --version` |
-| img2pdf (PDF alternative, simpler) | `pip install img2pdf` | `img2pdf --version` |
-| Vercel CLI | `npm install -g vercel` | `vercel --version` |
+| Playwright + Chromium | Must already be present in the image/project | `npx playwright --version` |
+| ImageMagick (for PDF) | Must already be installed by the user/image build | `magick --version` |
+| img2pdf (PDF alternative, simpler) | Must already be installed by the user/image build | `img2pdf --version` |
 
-If any are missing on first run, surface the install command to the user; don't try to install silently.
+If any are missing, report the prerequisite and stop that export path. Do not
+run package managers from sandboxed shell.
 
 ## Step 1 — Verify dev server
 
-```bash
-# Ping the dev server (portless-compatible — set SLIDE_DECK_DEV_HOST to e.g. yoursite.localhost:1355)
-curl -sf -o /dev/null -w "%{http_code}" http://${SLIDE_DECK_DEV_HOST:-localhost:3000}/slides/<slug> && echo " OK" || echo " not running"
-```
+Sandboxed shell cannot reach loopback. Check the existing dev process through
+the host's advertised process/browser tooling when available. If no such tool
+is advertised, report `execution_unavailable` for live rendering and ask the
+user to start and verify the deck in their own terminal/browser.
 
 If not running:
 
@@ -162,16 +164,12 @@ open ~/Documents/slide-exports/<slug>-<date>/<slug>.pdf
 
 ### vercel (shareable URL)
 
-1. Ensure the standalone `html` has been generated (see html section above)
-2. Deploy:
-   ```bash
-   cd ~/Documents/slide-exports/<slug>-<date>/ && vercel --prod --yes
-   ```
-3. Report the URL Vercel returns.
-
-First-time only: the user needs to be logged in (`vercel login`). The skill should check `vercel whoami` and prompt if needed.
-
-To take a deployed deck down later: `vercel rm <project-name>`.
+Ensure the standalone `html` has been generated, then return
+`execution_unavailable` for hosted publication and report the portable folder
+path. Do not invoke a hosting CLI or upload the folder through the generic JSON
+integration action; this path needs the separately designed typed asset
+transport. The user may publish or remove it through their approved hosting
+workflow.
 
 ## Caveats to surface to the user
 
