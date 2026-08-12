@@ -11,6 +11,9 @@ Gary Vaynerchuk's framework applied to your configured portfolio: keep the feed 
 
 **One-time setup**: see `references/properties.md` and `references/typefully-config.md` to configure your real portfolio + workspace. Personal config lives in `${MAKERSKILLS_CONFIG:-$HOME/.config/makerskills}/jab-hook/`.
 
+**Apply the project's brand:**
+If `BRAND.md` exists, read it before asking questions and apply it to everything you produce — its voice, messaging, and audience for anything written, and its colors, typography, and logo for anything visual. Never ask for a brand fact it already answers. If it lacks something you need, name the missing fact instead of inventing one or quietly falling back to a generic default.
+
 ## Mental model
 
 - **N rotation slots** (configured in `~/.config/makerskills/jab-hook/properties.yaml`): one per property you want to promote on rotation

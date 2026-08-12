@@ -9,6 +9,9 @@ metadata:
 
 Authors React/TypeScript decks for `${SLIDE_DECK_REPO:-$HOME/code/your-slide-deck-site}/src/app/slides/<slug>/page.tsx` using the user's slide system. The React deck is the source of truth. Hosted Agent can prepare an export handoff, but cannot drive a loopback Playwright renderer or publish assets until an asset-safe host action is advertised.
 
+**Apply the project's brand:**
+If `BRAND.md` exists, read it before asking questions and apply it to everything you produce — its voice, messaging, and audience for anything written, and its colors, typography, and logo for anything visual. Never ask for a brand fact it already answers. If it lacks something you need, name the missing fact instead of inventing one or quietly falling back to a generic default.
+
 ## Modes (pick one before Step 1)
 
 | Mode | Invocation | Goal |
