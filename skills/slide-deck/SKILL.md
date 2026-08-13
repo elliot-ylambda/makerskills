@@ -1,11 +1,13 @@
 ---
 name: slide-deck
-description: When you want to draft, update, convert, or prepare a user-run export of a slide deck for a React/Next.js slide system (${SLIDE_DECK_REPO:-$HOME/code/your-slide-deck-site}/src/app/slides/). Writes TypeScript Slide[] arrays using your primitives (Eyebrow, Heading, Accent, Body, BulletList, Divider, TwoCol, GradientText), 12 cycling brand gradients, optional sections for "where am I" context, and speaker notes. Inspired by zarazhangrui/frontend-slides — "show, don't tell" applied to narrative (presents 3 angles, you pick) plus density modes (speaker-led vs reading-first). Hosted Agent rendering/export fails closed until an asset-safe host renderer exists. Triggers on "/slide-deck," "/slides new," "/slides export," "/slides update," "/slides ppt," "draft a deck," "deck for [topic]," "talk on [topic]," "keynote on [topic]," "internal deck for [audience]," "convert this pptx," "export this deck."
+description: "Draft, update, PPTX-convert, or export branded React/Next.js slide decks: Slide[] primitives, three narrative angles, speaker notes, density modes."
 metadata:
   version: 0.2.2
 ---
 
 # /slide-deck — Draft, update, convert, and export branded React decks
+From the old description, not in the body: the slide system's primitive set also includes Divider and GradientText, and decks cycle through 12 brand gradients (see references/system.md); fold into the body's system overview so the detail isn't lost.
+
 
 Authors React/TypeScript decks for `${SLIDE_DECK_REPO:-$HOME/code/your-slide-deck-site}/src/app/slides/<slug>/page.tsx` using the user's slide system. The React deck is the source of truth. Hosted Agent can prepare an export handoff, but cannot drive a loopback Playwright renderer or publish assets until an asset-safe host action is advertised.
 

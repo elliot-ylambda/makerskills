@@ -1,6 +1,6 @@
 ---
 name: company-cfo
-description: Monthly CFO workflow for a company or agency — pull raw data from bank + payment processor + payroll + expense management, categorize and reconcile, compute end-of-month cash via transaction-sum method, update a scenario projector for forward forecasting, write the monthly snapshot report, surface decisions to leadership. Modes — monthly (default; the standing report), weekly (thin cash pulse), scenario (ad-hoc modeling in the projector), pickup (resume where the prior run left off). Anonymized team-scope sibling to personal-cfo (which handles personal household finances). Composes with company-brain (report gets stored + wiki-indexed there), toolify (wire company-specific data sources), loopify (schedule the monthly + weekly runs). Triggers on "/company-cfo," "/cfo," "monthly cash report," "do the CFO snapshot," "CFO monthly," "let's run CFO," "cash projection," "runway forecast," "monthly financials," "cash pulse."
+description: "Run monthly company CFO cadence: pull bank/processor/payroll data, reconcile, compute EOM cash, project runway scenarios; weekly cash pulse mode."
 metadata:
   version: 0.1.2
 ---

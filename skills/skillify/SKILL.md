@@ -1,6 +1,6 @@
 ---
 name: skillify
-description: When you want to create, adapt, or update a Claude Code skill in one of your sibling repos (list your own repos in ~/.config/makerskills/skillify/repos.yaml; defaults to makerskills). Routes to the right mode automatically. Modes — CREATE (from-chat / from-video / from-dump / from-scratch) turns a workflow, brief, recording, or fresh idea into a new skill. ADAPT ports an external skill (GitHub URL, agentskills.io, local disk) into your namespace with three-bucket classification (keep/adapt/add) + license check + attribution. UPDATE improves existing skills from learnings with cross-skill propagation, memory-vs-skill triage, and semver discipline. Defers to Anthropic's guidance (compound-engineering:create-agent-skill, compound-engineering:skill-creator, compound-engineering:heal-skill) for schema and best-practice depth. Triggers on "/skillify," "create a skill," "make this a skill," "skill from this chat," "extract a skill from what we've been doing," "adapt this skill," "port this skill," "fork this skill," "borrow this skill," "update X skill," "apply this to the relevant skills," "propagate this learning," "improve [skill]," "fix [skill]," "iterate on [skill]." Part of the -ify trifecta (skillify / toolify / loopify) for extending Claude Code.
+description: "Create, adapt, or update a Claude Code skill — from chat, video, dump, or scratch; port external skills with license check; propagate learnings."
 metadata:
   version: 0.2.2
 ---

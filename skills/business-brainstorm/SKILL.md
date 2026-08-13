@@ -1,11 +1,13 @@
 ---
 name: business-brainstorm
-description: "When you want to pressure-test a potential new business, product, or side project against the serial-founder filter. Not \"marketing ideas for a product\" (that's marketing-skills:marketing-ideas) — this is \"should this business exist + can you win it.\" Runs the idea through a structured framework (problem, audience, wedge, monetization, moat, portfolio fit, distribution, energy fit, opportunity cost), checks domain availability via /domain, optionally triggers /deep-research for market validation, and outputs a viability brief: build / sleep on it / pass. Archives every idea to ~/.config/makerskills/business-brainstorm/archive/ so past work is searchable. Triggers on \"/business-brainstorm,\" \"/brainstorm,\" \"new business idea,\" \"should I build X,\" \"pressure test this idea,\" \"validate this idea,\" \"is X a good business,\" \"what about a [type] for [audience].\""
+description: "Pressure-test or validate a new business, product, or side-project idea against a 9-dimension founder filter; verdict: build / sleep on it / pass."
 metadata:
   version: 0.2.0
 ---
 
 # /business-brainstorm — Pressure-test a business idea
+Scope line from the old description not stated in the body: this is "should this business exist + can you win it" — not "marketing ideas for a product" (route those to marketing-skills:marketing-ideas).
+
 
 Takes a vague idea, runs it through the user's filter, and outputs a structured viability brief. Composes with `deep-research` (for market) and `/domain` (for naming).
 

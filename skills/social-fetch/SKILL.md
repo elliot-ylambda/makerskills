@@ -1,6 +1,6 @@
 ---
 name: social-fetch
-description: "Fetch and normalize a public social post by URL using reviewed typed Magister social-research or page-extraction actions. Supports the public routes documented by magister-social-research and degrades explicitly when a platform is private, deleted, auth-walled, or lacks a typed route. Never uses shell networking or user API keys."
+description: "Fetch and normalize a public social post by URL (X, LinkedIn, Reddit, TikTok, HN, more) via typed Magister routes; no shell networking or user keys."
 metadata:
   version: 0.2.1
 ---

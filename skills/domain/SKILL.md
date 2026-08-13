@@ -1,6 +1,6 @@
 ---
 name: domain
-description: "Brainstorm memorable domain names, organize candidates by budget and naming quality, and prepare safe user-run availability, trademark, social-handle, aftermarket, and purchase checks. Triggers on /domain, find a domain, check domain availability, brainstorm a domain, domain hunt, name my project, aftermarket price, or trademark check."
+description: "Brainstorm and rank domain name candidates by budget and quality; prepare user-run availability, trademark, social-handle, and aftermarket checks."
 metadata:
   version: 0.2.0
 ---
