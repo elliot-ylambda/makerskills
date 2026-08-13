@@ -1,6 +1,6 @@
 ---
 name: watch-video
-description: When you want to transcribe or analyze a local/attached video. Three depth modes are available — transcript, visual, and dense local-frame analysis. Remote video acquisition and direct provider uploads require a reviewed typed asset/video action and otherwise return execution_unavailable. Saves outputs under ~/Documents/videos/ and can capture a summary to second-brain.
+description: "Transcribe or analyze a local/attached video at transcript, visual, or multimodal depth — frames + key moments; capture summary to second-brain."
 metadata:
   version: 0.2.4
 ---

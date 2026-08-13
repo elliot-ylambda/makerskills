@@ -1,6 +1,6 @@
 ---
 name: deep-research
-description: "When you want multi-source, multi-step research on a topic — competitor research before a sales call, market research for a new business idea, positioning angles, due diligence on a partnership or podcast guest, tech decision research (which DB, which auth), or any \"I need to actually understand X.\" Combines WebSearch, WebFetch, Firecrawl (magister-firecrawl), /last30days (Reddit/X/YouTube/HN/web recency), memory, and Notion. Outputs a structured brief with citations, contradictions, gaps, and recommended next steps. Archives every research run to ~/.config/makerskills/deep-research/archive/ so past work is searchable. Triggers on \"/deep-research,\" \"research X,\" \"investigate X,\" \"do a deep dive on X,\" \"look into X,\" \"what's actually happening with X,\" \"due diligence on X,\" \"validate this market.\" Differs from a one-shot WebSearch: this is multi-pass with verification."
+description: "Investigate a topic with multi-pass research (web, Firecrawl, /last30days, memory, Notion) into a cited brief; market validation, due diligence."
 metadata:
   version: 0.2.1
 ---
